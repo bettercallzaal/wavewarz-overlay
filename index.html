@@ -3,12 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WaveWarZ - Now Battling</title>
+<title>WaveWarZ - Live Overlay</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  /* Transparent page: composites over video in Restream browser source */
+  /* Transparent page: composites over video in Restream/OBS browser source.
+     Live numbers pulled same-origin from /ww-activity.json + /ww-volboard.json
+     (the tracker's own snapshots), refreshed every 90s. */
   * { margin:0; padding:0; box-sizing:border-box; }
   html, body { background:transparent; overflow:hidden; height:100%; }
 
@@ -16,8 +18,8 @@
 
   .bar {
     position:fixed; left:50%; bottom:6vh; transform:translateX(-50%);
-    display:flex; align-items:center; gap:22px;
-    padding:14px 28px 14px 18px;
+    display:flex; flex-direction:column; gap:10px;
+    padding:14px 26px 12px 18px;
     background:var(--glass);
     border:1px solid rgba(255,255,255,0.10);
     border-radius:14px;
@@ -25,21 +27,22 @@
     box-shadow:0 8px 32px rgba(0,0,0,0.45);
     white-space:nowrap;
   }
+  .row { display:flex; align-items:center; gap:22px; }
 
   .logo { display:flex; align-items:center; }
-  .logo img { height:52px; width:auto; display:block; }
+  .logo img { height:48px; width:auto; display:block; }
   .logo .fallback {
-    font-family:'Anton', sans-serif; font-size:30px; letter-spacing:0.04em;
+    font-family:'Anton', sans-serif; font-size:28px; letter-spacing:0.04em;
     color:var(--ink); display:none;
   }
 
   .live {
     display:flex; align-items:center; gap:8px;
     font-family:'Space Grotesk', sans-serif; font-weight:600;
-    font-size:13px; letter-spacing:0.22em; color:var(--ink);
+    font-size:12px; letter-spacing:0.22em; color:var(--ink);
   }
   .live .dot {
-    width:10px; height:10px; border-radius:50%; background:var(--gold);
+    width:9px; height:9px; border-radius:50%; background:var(--gold);
     animation:pulse 1.6s ease-in-out infinite;
   }
   @keyframes pulse {
@@ -47,36 +50,34 @@
     50%       { opacity:0.55; box-shadow:0 0 0 7px rgba(255,201,60,0); }
   }
 
-  .matchup {
-    display:flex; align-items:baseline; gap:16px;
-    font-family:'Anton', sans-serif; color:var(--ink);
-  }
-  .matchup .name { font-size:34px; letter-spacing:0.03em; line-height:1; }
-  .matchup .vs   { font-size:20px; color:var(--gold); letter-spacing:0.08em; }
+  .matchup { display:flex; align-items:baseline; gap:14px;
+    font-family:'Anton', sans-serif; color:var(--ink); }
+  .matchup .name { font-size:32px; letter-spacing:0.03em; line-height:1; }
+  .matchup .vs   { font-size:18px; color:var(--gold); letter-spacing:0.08em; }
 
-  .meta {
-    display:flex; flex-direction:column; gap:6px; align-items:flex-start;
-  }
-  .sub {
-    font-family:'Space Grotesk', sans-serif; font-size:12px; font-weight:400;
-    letter-spacing:0.14em; color:rgba(255,255,255,0.65); text-transform:uppercase;
-  }
-
-  .eq { display:flex; align-items:flex-end; gap:3px; height:26px; }
-  .eq span {
-    width:4px; background:var(--gold); border-radius:2px;
-    animation:eq 1.1s ease-in-out infinite;
-  }
+  .eq { display:flex; align-items:flex-end; gap:3px; height:24px; }
+  .eq span { width:4px; background:var(--gold); border-radius:2px;
+    transform-origin:bottom; animation:eq 1.1s ease-in-out infinite; }
   .eq span:nth-child(1){ height:40%; animation-delay:0s;    }
   .eq span:nth-child(2){ height:80%; animation-delay:0.15s; }
   .eq span:nth-child(3){ height:55%; animation-delay:0.3s;  }
   .eq span:nth-child(4){ height:95%; animation-delay:0.08s; }
   .eq span:nth-child(5){ height:60%; animation-delay:0.22s; }
-  @keyframes eq {
-    0%,100% { transform:scaleY(0.5); }
-    50%     { transform:scaleY(1.05); }
+  @keyframes eq { 0%,100%{transform:scaleY(0.5);} 50%{transform:scaleY(1.05);} }
+
+  /* Live stats strip - values tick + flash gold when they change */
+  .stats {
+    display:flex; align-items:center; gap:20px;
+    font-family:'Space Grotesk', sans-serif; font-size:12px;
+    letter-spacing:0.12em; color:rgba(255,255,255,0.65); text-transform:uppercase;
+    border-top:1px solid rgba(255,255,255,0.08); padding-top:9px;
   }
-  .eq span { transform-origin:bottom; }
+  .stats b {
+    font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums;
+    transition:color 0.4s ease;
+  }
+  .stats b.flash { color:var(--gold); }
+  .stats .tag { color:rgba(255,255,255,0.4); }
 
   @media (prefers-reduced-motion: reduce) {
     .live .dot { animation:none; }
@@ -86,34 +87,79 @@
 </head>
 <body>
   <div class="bar">
-    <div class="logo">
-      <img src="https://wavewarz.com/images/battles/WaveWarZLogoFinal.PNG" alt="WaveWarZ"
-           onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-      <span class="fallback">WAVEWARZ</span>
-    </div>
-    <div class="meta">
+    <div class="row">
+      <div class="logo">
+        <img src="https://wavewarz.com/images/battles/WaveWarZLogoFinal.PNG" alt="WaveWarZ"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <span class="fallback">WAVEWARZ</span>
+      </div>
       <div class="live"><span class="dot"></span>LIVE</div>
-      <div class="sub" id="sub">Back Music, Not Memes.</div>
+      <div class="matchup">
+        <span class="name" id="left">ARTIST A</span>
+        <span class="vs">VS</span>
+        <span class="name" id="right">ARTIST B</span>
+      </div>
+      <div class="eq" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
     </div>
-    <div class="matchup">
-      <span class="name" id="left">ARTIST A</span>
-      <span class="vs">VS</span>
-      <span class="name" id="right">ARTIST B</span>
+    <div class="stats">
+      <span><b id="vol">--</b> SOL <span class="tag">30D VOL</span></span>
+      <span><b id="battles">--</b> <span class="tag">BATTLES</span></span>
+      <span><b id="today">--</b> <span class="tag">TODAY</span></span>
+      <span id="subwrap"><span class="tag" id="sub">BACK MUSIC, NOT MEMES.</span></span>
     </div>
-    <div class="eq" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
   </div>
 
 <script>
-  // One URL to paste into Restream: ?left=Name&right=Name&sub=Custom+line
   (function () {
+    // Names/sub via query params - one URL to paste into Restream.
     var q = new URLSearchParams(location.search);
-    function set(id, key, upper) {
+    function setText(id, key, upper) {
       var v = q.get(key);
       if (v) document.getElementById(id).textContent = upper ? v.toUpperCase() : v;
     }
-    set('left',  'left',  true);
-    set('right', 'right', true);
-    set('sub',   'sub',   false);
+    setText('left', 'left', true);
+    setText('right', 'right', true);
+    setText('sub', 'sub', true);
+
+    // Live numbers: same-origin tracker snapshots. Values flash gold on change.
+    var prev = {};
+    function put(id, value) {
+      var el = document.getElementById(id);
+      if (el.textContent === value) return;
+      el.textContent = value;
+      if (prev[id] !== undefined) {
+        el.classList.add('flash');
+        setTimeout(function () { el.classList.remove('flash'); }, 1200);
+      }
+      prev[id] = value;
+    }
+
+    function refresh() {
+      fetch('/ww-activity.json', { cache: 'no-store' })
+        .then(function (r) { return r.json(); })
+        .then(function (days) {
+          if (!Array.isArray(days) || !days.length) return;
+          var battles = 0;
+          days.forEach(function (d) { battles += (d.battles || 0); });
+          var last = days[days.length - 1];
+          var todayTx = (last.buys || 0) + (last.sells || 0) + (last.claims || 0) + (last.mints || 0);
+          put('battles', String(battles));
+          put('today', todayTx + ' TX');
+        })
+        .catch(function () {});
+
+      fetch('/ww-volboard.json', { cache: 'no-store' })
+        .then(function (r) { return r.json(); })
+        .then(function (vb) {
+          var rows = (vb && vb.rows) || [];
+          var sol = rows.reduce(function (s, r) { return s + (r.sol || 0); }, 0);
+          if (sol > 0) put('vol', sol.toFixed(1));
+        })
+        .catch(function () {});
+    }
+
+    refresh();
+    setInterval(refresh, 90000); // 90s - snapshot files only move on redeploy/cron
   })();
 </script>
 </body>

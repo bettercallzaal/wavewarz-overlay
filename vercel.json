@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/ww-activity.json", "destination": "https://wwtracker.vercel.app/ww-activity.json" },
+    { "source": "/ww-volboard.json", "destination": "https://wwtracker.vercel.app/ww-volboard.json" }
+  ]
+}
