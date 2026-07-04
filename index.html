@@ -26,6 +26,11 @@
     white-space:nowrap; overflow:hidden;
   }
   body.pos-bottom .ticker { top:auto; bottom:1.6vh; }
+  body.compact .ticker { height:5vh; }
+  body.compact .matchup .name { font-size:2.6vh; }
+  body.compact .logo img { height:3.6vh; }
+  body.compact .slot .item b { font-size:2.2vh; }
+  body.solid .ticker { background:#0a0c10; }
 
   .logo { display:flex; align-items:center; flex:0 0 auto; }
   .logo img { height:5.2vh; width:auto; display:block; }
@@ -113,6 +118,14 @@
     setText('left', 'left');
     setText('right', 'right');
     if (q.get('pos') === 'bottom') document.body.classList.add('pos-bottom');
+    var accent = q.get('accent');
+    if (accent && /^[0-9a-fA-F]{6}$/.test(accent)) {
+      document.documentElement.style.setProperty('--gold', '#' + accent);
+    }
+    if (q.get('compact')) document.body.classList.add('compact');
+    if (q.get('solid')) document.body.classList.add('solid');
+    if (q.get('nologo')) document.querySelector('.logo').style.display = 'none';
+    if (q.get('noeq')) document.querySelector('.eq').style.display = 'none';
     // ?nomatch=1 hides the matchup for between-battle scenes - pure stats ticker
     if (q.get('nomatch')) {
       document.getElementById('matchup').style.display = 'none';

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WaveWarZ Overlay - Try the Looks</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0d1117; color:#fff; font-family:'Space Grotesk',sans-serif; padding:32px 4vw 80px; }
+  h1 { font-size:1.6rem; margin-bottom:6px; }
+  p.lede { color:rgba(255,255,255,0.6); margin-bottom:28px; font-size:0.95rem; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(420px, 1fr)); gap:26px; }
+  .card { background:#161b22; border:1px solid rgba(255,255,255,0.08); border-radius:12px; overflow:hidden; }
+  .card h2 { font-size:0.95rem; font-weight:600; padding:12px 14px 2px; }
+  .card .note { font-size:0.78rem; color:rgba(255,255,255,0.5); padding:0 14px 10px; }
+  .stage { position:relative; width:100%; aspect-ratio:16/9;
+    background:linear-gradient(135deg,#12331f 0%,#0b1f2e 55%,#241236 100%); overflow:hidden; }
+  .stage::after { content:"your video"; position:absolute; inset:0; display:flex; align-items:center;
+    justify-content:center; color:rgba(255,255,255,0.14); font-size:1.6rem; letter-spacing:0.3em;
+    text-transform:uppercase; pointer-events:none; }
+  .stage iframe { position:absolute; inset:0; width:200%; height:200%;
+    transform:scale(0.5); transform-origin:top left; border:0; }
+  .urlrow { display:flex; gap:8px; padding:12px 14px 14px; }
+  .urlrow input { flex:1; background:#0d1117; border:1px solid rgba(255,255,255,0.12); border-radius:7px;
+    color:rgba(255,255,255,0.75); font-size:0.72rem; padding:8px 10px; font-family:ui-monospace,monospace; }
+  .urlrow button { background:#FFC93C; color:#141e27; border:0; border-radius:7px; font-weight:600;
+    font-size:0.78rem; padding:8px 14px; cursor:pointer; }
+  .urlrow button:active { opacity:0.8; }
+</style>
+</head>
+<body>
+  <h1>WaveWarZ Overlay - try the looks</h1>
+  <p class="lede">Each preview is the real widget over a stand-in video. Copy the URL you like into Restream's widget box, then maximize it. Mix params freely: left, right, pos=bottom, nomatch=1, compact=1, solid=1, nologo=1, noeq=1, accent=hex.</p>
+  <div class="grid" id="grid"></div>
+
+<script>
+  var variants = [
+    ["Classic top bar", "Battle mode, gold accent, top of screen", "?left=JANGOUU&right=APORKALYPSE"],
+    ["Bottom bar", "Same bar, pinned to the bottom lower-third", "?left=JANGOUU&right=APORKALYPSE&pos=bottom"],
+    ["Stats ticker (no matchup)", "Between battles - pure rotating live stats", "?nomatch=1"],
+    ["Compact top", "Slimmer strip, smaller type - less screen", "?left=JANGOUU&right=APORKALYPSE&compact=1"],
+    ["Compact bottom ticker", "Slim stats-only strip at the bottom", "?nomatch=1&compact=1&pos=bottom"],
+    ["Solid black", "Opaque bar for busy footage", "?left=JANGOUU&right=APORKALYPSE&solid=1"],
+    ["WaveWarZ green", "Accent swapped to the logo green", "?left=JANGOUU&right=APORKALYPSE&accent=39FF88"],
+    ["Ice blue", "Accent swapped to blue", "?left=JANGOUU&right=APORKALYPSE&accent=4DC9FF"],
+    ["No logo, no EQ", "Text-only minimal bar", "?left=JANGOUU&right=APORKALYPSE&nologo=1&noeq=1"],
+    ["Minimal bottom stats", "Cleanest possible: compact stats, no logo", "?nomatch=1&compact=1&pos=bottom&nologo=1&noeq=1"]
+  ];
+  var base = location.origin + "/";
+  var grid = document.getElementById("grid");
+  variants.forEach(function (v) {
+    var url = base + v[2];
+    var card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML =
+      '<h2></h2><div class="note"></div>' +
+      '<div class="stage"><iframe loading="lazy"></iframe></div>' +
+      '<div class="urlrow"><input readonly><button type="button">Copy</button></div>';
+    card.querySelector("h2").textContent = v[0];
+    card.querySelector(".note").textContent = v[1];
+    card.querySelector("iframe").src = url;
+    var input = card.querySelector("input");
+    input.value = url;
+    card.querySelector("button").addEventListener("click", function () {
+      navigator.clipboard.writeText(url);
+      this.textContent = "Copied"; var b = this;
+      setTimeout(function () { b.textContent = "Copy"; }, 1200);
+    });
+    grid.appendChild(card);
+  });
+</script>
+</body>
+</html>
