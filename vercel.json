@@ -1,6 +1,16 @@
 {
   "rewrites": [
-    { "source": "/ww-activity.json", "destination": "https://wwtracker.vercel.app/ww-activity.json" },
-    { "source": "/ww-volboard.json", "destination": "https://wwtracker.vercel.app/ww-volboard.json" }
+    {
+      "source": "/ww-activity.json",
+      "destination": "https://wwtracker.vercel.app/ww-activity.json"
+    },
+    {
+      "source": "/ww-volboard.json",
+      "destination": "https://wwtracker.vercel.app/ww-volboard.json"
+    },
+    {
+      "source": "/ww-lifetime.json",
+      "destination": "https://wwtracker.vercel.app/ww-lifetime.json"
+    }
   ]
 }

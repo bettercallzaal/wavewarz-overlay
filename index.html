@@ -137,8 +137,11 @@
 
     function shorten(addr) { return addr ? addr.slice(0, 4) + '..' + addr.slice(-4) : ''; }
 
-    function rebuild(activity, volboard) {
+    function rebuild(activity, volboard, lifetime) {
       var f = [];
+      if (lifetime && lifetime.lifetime_sol) {
+        f.push({ v: (lifetime.approx ? '' : '') + Math.round(lifetime.lifetime_sol) + '+ SOL', t: 'total traded since May 2025' });
+      }
       if (Array.isArray(activity) && activity.length) {
         var battles = 0, buys = 0;
         var peak = activity[0];
@@ -175,8 +178,9 @@
     function refresh() {
       Promise.all([
         fetch('/ww-activity.json', { cache: 'no-store' }).then(function (r) { return r.json(); }).catch(function () { return null; }),
-        fetch('/ww-volboard.json', { cache: 'no-store' }).then(function (r) { return r.json(); }).catch(function () { return null; })
-      ]).then(function (res) { rebuild(res[0], res[1]); });
+        fetch('/ww-volboard.json', { cache: 'no-store' }).then(function (r) { return r.json(); }).catch(function () { return null; }),
+        fetch('/ww-lifetime.json', { cache: 'no-store' }).then(function (r) { return r.json(); }).catch(function () { return null; })
+      ]).then(function (res) { rebuild(res[0], res[1], res[2]); });
     }
 
     // ---- rotation ----
